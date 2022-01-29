@@ -1,0 +1,51 @@
+server:
+  port: 18085
+spring:
+  application:
+    name: sentinel-spring-cloud-gateway
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        enabled: true
+        register-enabled: false
+        #定义注册中心的地址
+        server-addr: 127.0.0.1:8848
+        ephemeral: false
+    gateway:
+      enabled: true
+      discovery:
+        locator:
+          lower-case-service-id: true
+      #定义路由策略
+      routes:
+      - id: yxy_route
+        uri: lb://service-consumer
+        predicates:
+        - Path=/ss/**
+        filters:
+        - StripPrefix=1
+
+    sentinel:
+      #定义sentinel的地址
+      transport:
+        dashboard: localhost:8081
+      filter:
+        enabled: true
+      #定义触发限流时候的返回值（响应值和响应内容）
+      scg.fallback:
+          mode: response
+          response-status: 444
+          response-body: 1234
+      scg:
+        order: -100
+      datasource.ds.nacos:
+        #定义配置中心的地址
+        server-addr: 127.0.0.1:8848
+        dataId: ${spring.application.name}-sentinel
+        groupId: DEFAULT_GROUP
+        ruleType: gw-flow
+
+
+management.endpoints.web.exposure.include: "*"

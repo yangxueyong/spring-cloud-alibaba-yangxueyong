@@ -1,0 +1,44 @@
+server:
+  port: 18087
+
+hystrix:
+  dashboard:
+    proxy-stream-allow-list: localhost
+
+
+spring:
+  application:
+    name: service-consumer
+  cloud:
+    nacos:
+      config:
+        refresh-enabled: true
+      discovery:
+        server-addr: 127.0.0.1:8848
+    sentinel:
+      transport:
+        dashboard: 127.0.0.1:8081
+
+feign:
+  sentinel:
+    enabled: true
+  client:
+    config:
+      device:
+        connect-timeout: 500
+        read-timeout: 500
+      device2:
+        connect-timeout: 1500
+        read-timeout: 1500
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    hystrix:
+      stream:
+        enabled: true
+    health:
+      show-details: always

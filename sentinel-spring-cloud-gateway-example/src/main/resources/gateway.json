@@ -1,0 +1,24 @@
+[
+  {
+    "resource": "some_customized_api",
+    "count": 1
+  },
+  {
+    "resource": "httpbin_route",
+    "count": 0,
+    "paramItem": {
+      "parseStrategy": 2,
+      "fieldName": "Spring-Cloud-Alibaba"
+    }
+  },
+  {
+    "resource": "yxy_route",
+    "count": 0,
+    "paramItem": {
+      "parseStrategy": 3,
+      "fieldName": "name",
+      "pattern": "123",
+      "matchStrategy": 0
+    }
+  }
+]
