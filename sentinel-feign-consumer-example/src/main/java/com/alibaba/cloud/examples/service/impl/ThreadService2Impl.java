@@ -36,6 +36,7 @@ public class ThreadService2Impl implements ThreadService {
         log.info("[{}] + 5 = {}",n,sum);
         MyThreadEntity myThreadEntity = new MyThreadEntity();
         myThreadEntity.setFlag(true);
+        myThreadEntity.setResult(sum);
         return myThreadEntity;
     }
 

@@ -1,9 +1,6 @@
 package com.alibaba.cloud.examples.service.impl;
 
-import com.alibaba.cloud.examples.service.ThreadPoolService;
 import com.alibaba.cloud.examples.service.ThreadTtlPoolService;
-import com.alibaba.cloud.examples.util.InheritableThreadLocalUtil;
-import com.alibaba.cloud.examples.util.ThreadLocalUtil;
 import com.alibaba.cloud.examples.util.TtlThreadLocalUtil;
 import com.alibaba.ttl.TtlRunnable;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -14,6 +11,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author ：29520
@@ -24,56 +23,54 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-public class ThreadTtlPoolServiceImpl implements ThreadTtlPoolService {
+public class ThreadTtlPoolService2Impl implements ThreadTtlPoolService {
 
     ThreadFactory th = new ThreadFactoryBuilder().setNameFormat("yxy002").build();
     ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(2, 5, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000),th, new ThreadPoolExecutor.AbortPolicy());
 
+    final Lock lock = new ReentrantLock();
+
     @Override
     public String core(int userNo) {
-        ThreadLocalUtil.put("userNo", userNo);
+        TtlThreadLocalUtil.put("userNo", userNo);
 
-        log.info("当前用户1->{}",ThreadLocalUtil.get("userNo"));
+        log.info("当前用户1->{}",TtlThreadLocalUtil.get("userNo"));
 
-//        createPool();
+        try {
+            createPool();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
-        ThreadLocalUtil.remove();
+        TtlThreadLocalUtil.remove();
         return "success";
     }
 
-//    public boolean createPool(){
-//        poolExecutor.execute(TtlRunnable.get(()->{
-//            log.info("当前用户2->{}", ThreadLocalUtil.get("userNo"));
-//        }));
-//
-//
-//        return true;
-//    }
-
-    public boolean createPool(){
+    public boolean createPool() throws InterruptedException {
 
         poolExecutor.execute(TtlRunnable.get(()->{
             int j = 0;
             while(++j < 100) {
-                log.info("当前用户2->{}", ThreadLocalUtil.get("userNo"));
+                lock.lock();
                 try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.info("当前用户2->{}", TtlThreadLocalUtil.get("userNo"));
+                }finally {
+                    lock.unlock();
                 }
             }
         }));
 
         int i = 0;
         while(++i < 100){
+            lock.lock();
             try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                int userNo = (int) (Math.random() * 100000);
+                log.info("随机产生的userNo->{}", userNo);
+                TtlThreadLocalUtil.put("userNo", userNo);
+            }finally {
+                lock.unlock();
             }
-            int userNo = (int) (Math.random() * 100000);
-            log.info("随机产生的userNo->{}", userNo);
-            TtlThreadLocalUtil.put("userNo", userNo);
+            Thread.sleep(1000);
         }
 
         return true;

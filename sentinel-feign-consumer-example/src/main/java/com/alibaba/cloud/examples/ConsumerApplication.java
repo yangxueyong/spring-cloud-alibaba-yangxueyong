@@ -16,24 +16,31 @@
 
 package com.alibaba.cloud.examples;
 
+import com.alibaba.cloud.examples.annotation.MyTestAnnotation;
 import com.alibaba.cloud.examples.config.MarketFeignConfig;
 import com.alibaba.cloud.examples.config.MarketFeignUtil;
+import com.alibaba.cloud.examples.config.SpringContextLoader;
 import com.alibaba.cloud.examples.config.UserConfig;
 import com.alibaba.cloud.nacos.NacosConfigManager;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.nacos.api.config.listener.Listener;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.client.SpringCloudApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.netflix.hystrix.dashboard.EnableHystrixDashboard;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -44,6 +51,7 @@ import java.util.concurrent.Executor;
 @SpringCloudApplication
 @EnableHystrix
 @EnableHystrixDashboard
+@EnableDiscoveryClient
 public class ConsumerApplication {
 
 	public static void main(String[] args) {
@@ -58,6 +66,20 @@ public class ConsumerApplication {
 	@Bean
 	public UserConfig userConfig() {
 		return new UserConfig();
+	}
+
+	@PostConstruct
+	public void init(){
+		new Thread(){
+			@SneakyThrows
+			@Override
+			public void run() {
+				Thread.sleep(5000);
+				Map<String, Object> beansWithAnnotation = SpringContextLoader.getBeansWithAnnotation(MyTestAnnotation.class);
+				System.out.println("-->" + JSON.toJSONString(beansWithAnnotation));
+			}
+		}.start();
+
 	}
 }
 
